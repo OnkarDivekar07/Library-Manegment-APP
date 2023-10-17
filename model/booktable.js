@@ -5,14 +5,25 @@ const sequelize = require('../util/database');
 const books = sequelize.define('books', {
     id: {
         type: Sequelize.INTEGER,
-        autoIncrement: true,
         allowNull: false,
-        primaryKey: true
+        primaryKey: true,
+        autoIncrement: true
     },
-    description: {
+    bookName: {
         type: Sequelize.STRING,
         allowNull: false
+    },
+    returned: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+    },
+    fine: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+
     }
+
 
 })
 

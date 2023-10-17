@@ -1,76 +1,139 @@
-const form = document.getElementById('form');
-const url = document.getElementById('url');
-const description = document.getElementById('description');
-const list = document.getElementById('list');
+document.getElementById('addbook').addEventListener('submit', addBook)
 
-form.addEventListener('submit', post);
+const books = document.querySelector('#display')
+const returned = document.querySelector('#returned ul')
 
-function post(e) {
-    e.preventDefault();
-    const postdescription = description.value;
+const axiosInstance = axios.create({
+    baseURL: 'http://localhost:4000/book'
+});
 
-    const post = {
-        description: postdescription
-    };
-
-    axios
-        .post('http://localhost:3000/postbooks', post)
-        .then((res) => {
-           // createCard(res.data);
-            console.log(res)
-        })
-        .catch((err) => {
-            console.log(err);
-        });
-
-    console.log(post);
-}
-
- function createCard(res) {
-    const div = document.createElement('div');
-    div.className = 'divclass'
-    const li = document.createElement('li');
-
-    const description = document.createElement('h5');
-    description.innerText = `Book Name: ${res.description}`;
-    li.appendChild(description);
-     
-    const takenon = document.createElement('h6');
-     takenon.innerText = `taken on Date: ${res.createdAt}`;
-     li.appendChild(takenon);
-
-     const returnon = document.createElement('h6');
-     returnon.innerText = `return on Date: ${res.createdAt}`;
-     li.appendChild(returnon);
-
-     const fine = document.createElement('h6');
-     fine.innerText = `fine to be paid :0`;
-     li.appendChild(fine);
-
-
-    const commentButton = document.createElement('button');
-     commentButton.className = 'btn btn-success'
-
-    commentButton.textContent = 'return book';
-    li.appendChild(commentButton);
-    div.appendChild(li);
-    list.appendChild(div);
-}
-
-
-
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('load', async () => {
     try {
-        let res = await axios.get('http://localhost:3000/getbooks');
-        for (var i = 0; i < res.data.length; i++) {
-            // console.log(res.data);
-            createCard(res.data[i]);
-        }
-    } catch (error) {
-        console.log(error);
+        const data = await axiosInstance.get()
+        console.log(data)
+        data.data.forEach(book => {
+            if (book.returned)
+                returnedBooksDisplay(book);
+            else
+                display(book);
+        })
+    } catch (e) {
+        console.log(e)
     }
+});
 
- });
+async function addBook(e) {
+    e.preventDefault();
+    try {
+        const data = {
+            name: e.target.name.value
+        }
 
+        const res = await axiosInstance.post('/addbook', data)
+        display(res.data)
+        console.log(res.data)
+        e.target.name.value = ""
+    } catch (e) {
+        console.log(e)
+    }
+}
 
+function display(data) {
+    const li = document.createElement('div')
+    li.classList.add("items")
+    const date1 = new Date(data.updatedAt);
 
+    const formattedDate = date1.toLocaleDateString();
+    const formattedTime = date1.toLocaleTimeString(undefined, {
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: true,
+    });
+
+    const p = document.createElement('p')
+    p.textContent = `Book Name : ${data.bookName}`
+    const p2 = document.createElement('p')
+    p2.textContent = `Book taken on  :  ${formattedDate} , ${formattedTime}`
+    date1.setHours(date1.getHours() + 1)
+    const formattedTime1 = date1.toLocaleTimeString(undefined, {
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: true,
+    });
+
+    const p3 = document.createElement('p')
+    p3.textContent = `Book return date :  ${date1.toLocaleDateString()} , ${formattedTime1}`
+    const p4 = document.createElement('p')
+    const hours = Math.floor((new Date() - new Date(data.createdAt)) / (1000 * 60 * 60))
+    const fine = hours * 10;
+
+    p4.textContent = `current fine : ${fine}`
+    li.appendChild(p)
+    li.appendChild(p2)
+    li.appendChild(p3)
+    li.appendChild(p4)
+
+    const returnBook = document.createElement('button')
+    returnBook.textContent = "Return book"
+    li.appendChild(returnBook)
+    returnBook.onclick = () => {
+        li.innerHTML = ``
+        const input = document.createElement('input')
+        const hours = Math.floor((new Date() - new Date(data.createdAt)) / (1000 * 60 * 60))
+        if (hours == 0) {
+            axiosInstance.post('/return', { id: data.id, value: 0 })
+                .then((data) => {
+                    console.log(data)
+                    books.removeChild(li)
+                    returnedBooksDisplay(data.data.book)
+                }).catch(e => console.log(e))
+        } else {
+            const fine = hours * 10
+            input.value = fine
+            input.readOnly = true
+            input.disabled = true;
+            input.className = "show-fine"
+            const button = document.createElement('button')
+            button.classList.add("pay-fine")
+            button.textContent = "pay"
+            li.appendChild(input)
+            li.appendChild(button)
+            button.onclick = () => {
+                axiosInstance.post('/return', { id: data.id, value: fine })
+                    .then((data) => {
+                        console.log(data)
+                        books.removeChild(li)
+                        returnedBooksDisplay(data.data.book)
+                    }).catch(e => console.log(e))
+            }
+        }
+    }
+    books.appendChild(li)
+}
+
+function returnedBooksDisplay(data) {
+    const li = document.createElement('li')
+    const p = document.createElement('p')
+    p.textContent = `Book Name : ${data.bookName}`
+    const p1 = document.createElement('p')
+    p1.textContent = `fine : ${data.fine}`
+    const p2 = document.createElement('p')
+    const date1 = new Date(data.updatedAt);
+
+    const formattedDate = date1.toLocaleDateString();
+    const formattedTime = date1.toLocaleTimeString(undefined, {
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: true,
+    });
+
+    p2.textContent = `returned on : ${formattedDate} , ${formattedTime}`
+    li.appendChild(p)
+    li.appendChild(p1)
+    li.appendChild(p2)
+
+    returned.appendChild(li)
+}

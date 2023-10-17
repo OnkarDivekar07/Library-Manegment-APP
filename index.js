@@ -1,21 +1,23 @@
-//require  imports for sever
+
 const express = require('express');
 const app = express();
 const sequelize = require('./util/database');
-const booktable = require('./model/booktable')
-const returntable = require('./model/returntable')
-const getbooks=require('./routes/getbooks')
-const postbooks=require('./routes/postbooks')
+const books=require('./routes/routes')
+const cors = require('cors')
 
-app.use(getbooks)
-app.use(postbooks)
 
-returntable.belongsTo(booktable)
+app.use(cors())
+app.use(express.json())
 
-sequelize.sync()
+
+app.use('/book',books)
+
+
+
+sequelize.sync({})
     .then((result) => {
 
-        app.listen(3000);
+        app.listen(4000);
     })
     .catch((err) => {
         console.log(err);

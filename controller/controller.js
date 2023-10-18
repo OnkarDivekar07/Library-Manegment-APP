@@ -38,6 +38,7 @@ exports.returnBook = async (req, res) => {
             await book.save()
             return res.json({ success: true, book })
         } else {
+            //if reader has paid fair amount of fine or not
             const fine = hours * 10;
             console.log(fine)
             if (fine == value) {

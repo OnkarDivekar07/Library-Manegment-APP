@@ -13,7 +13,7 @@ app.use(express.json())
 app.use('/book',books)
 
 
-
+//this is to intialise database tables and then start the servers
 sequelize.sync({})
     .then((result) => {
 

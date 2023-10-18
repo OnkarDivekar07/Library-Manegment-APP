@@ -1,4 +1,6 @@
-document.getElementById('addbook').addEventListener('submit', addBook)
+const addBooks=document.getElementById('addbook')
+
+addBooks.addEventListener('submit', addBook)
 
 const books = document.querySelector('#display')
 const returned = document.querySelector('#returned ul')
